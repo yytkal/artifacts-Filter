@@ -1,6 +1,6 @@
-import copy
 import os
 
+import copy
 import pandas as pd
 
 from dict import set_simple, main_simple, eff_simple
@@ -104,7 +104,6 @@ for i in raw_build_data.index:
     if type(raw_build_data.iloc[i]['角色']) != str:
         all_build_amount = i
         break
-
 
 print('正在展开build......')
 d = {}

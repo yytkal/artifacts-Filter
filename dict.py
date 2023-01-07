@@ -246,8 +246,8 @@ set_simple = {'如雷': ['thunderingFury'],
               '幸运儿': ['luckyDog'],
               '游医': ['travelingDoctor'],
               '攻击2': ['shimenawaReminiscence', 'EchoesOfAnOffering', 'gladiatorFinale', 'VermillionHereafter',
-                        'braveHeart', 'resolutionOfSojourner',
-                        'DesertPavilionChronicle'],  # TODO: 2风近似为2攻击
+                      'braveHeart', 'resolutionOfSojourner',
+                      'DesertPavilionChronicle'],  # TODO: 2风近似为2攻击
               '精通2': ['wandererTroupe', 'GildedDreams', 'instructor', 'FlowerOfParadiseLost'],
               '防御2': ['huskOfOpulentDreams', 'defenderWill']
               }

@@ -1,8 +1,8 @@
-import copy
 import math
 import os
 from itertools import combinations, permutations
 
+import copy
 import pandas as pd
 
 proDir = os.path.split(os.path.realpath(__file__))[0]

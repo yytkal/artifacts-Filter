@@ -4,3 +4,6 @@
 dumps/
 __pycache__/
 .idea/
+test.png
+config/
+output.txt
