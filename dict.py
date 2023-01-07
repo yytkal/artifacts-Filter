@@ -191,7 +191,15 @@ set_dict = {
         "chs": "深林的记忆"},
     "GildedDreams": {
         "eng": "GildedDreams",
-        "chs": "饰金之梦"}
+        "chs": "饰金之梦"},
+    "DesertPavilionChronicle": {
+        "eng": "DesertPavilionChronicle",
+        "chs": "沙上楼阁史话"
+    },
+    "FlowerOfParadiseLost": {
+        "eng": "FlowerOfParadiseLost",
+        "chs": "乐园遗落之花"
+    }
 }
 
 set_simple = {'如雷': ['thunderingFury'],
@@ -206,6 +214,8 @@ set_simple = {'如雷': ['thunderingFury'],
               '绝缘': ['emblemOfSeveredFate'],
               '乐团': ['wandererTroupe'],
               '饰金': ['GildedDreams'],
+              '乐园': ['FlowerOfParadiseLost'],
+              '楼阁': ['DesertPavilionChronicle'],
               '宗室': ['noblesseOblige'],
               '海染': ['oceanHuedClam'],
               '少女': ['maidenBeloved'],
@@ -236,8 +246,9 @@ set_simple = {'如雷': ['thunderingFury'],
               '幸运儿': ['luckyDog'],
               '游医': ['travelingDoctor'],
               '攻击2': ['shimenawaReminiscence', 'EchoesOfAnOffering', 'gladiatorFinale', 'VermillionHereafter',
-                        'braveHeart', 'resolutionOfSojourner'],
-              '精通2': ['wandererTroupe', 'GildedDreams', 'instructor'],
+                        'braveHeart', 'resolutionOfSojourner',
+                        'DesertPavilionChronicle'],  # TODO: 2风近似为2攻击
+              '精通2': ['wandererTroupe', 'GildedDreams', 'instructor', 'FlowerOfParadiseLost'],
               '防御2': ['huskOfOpulentDreams', 'defenderWill']
               }
 
