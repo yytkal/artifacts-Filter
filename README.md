@@ -13,3 +13,13 @@
 - 支持8-20级圣遗物
 - 完善build库
 - 代码提速
+
+
+lifeStatic    1
+dtype: int64
+flower        1
+lifeStatic    0
+dtype: int64
+flower        NaN
+lifeStatic    0.0
+dtype: float64

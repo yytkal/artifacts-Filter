@@ -3,9 +3,12 @@ import os
 import copy
 import pandas as pd
 
+import util
 from dict import set_simple, main_simple, eff_simple
 from rarity import rarity_of_build
 
+_EXPAND_BUILD = util.GetConfig('build')
+_EXPANDED_BUILD_FILE = os.path.join(util.ROOT_DIR, 'config', 'expend_build.json')
 proDir = os.path.split(os.path.realpath(__file__))[0]
 
 with open(proDir + '/config/build.csv', 'r', encoding='utf8') as file:
@@ -99,22 +102,35 @@ def expand(build: pd.Series):
     return expanded_build
 
 
-all_build_amount = 0
-for i in raw_build_data.index:
-    if type(raw_build_data.iloc[i]['角色']) != str:
-        all_build_amount = i
-        break
+should_build = False
 
-print('正在展开build......')
-d = {}
-build_amount = 0
-for i in range(all_build_amount):
-    if raw_build_data.iloc[i]['启用'] == 'yes':
-        d[build_amount] = expand(raw_build_data.iloc[i])
-        build_amount += 1
-build_df = pd.DataFrame(d)
-build_df.to_json(path_or_buf=proDir + '/config/expend_build.json', force_ascii=False)
-print('展开完成.')
+if not _EXPAND_BUILD and os.path.exists(_EXPANDED_BUILD_FILE):
+    print('跳过build展开...')
+    build_df = pd.read_json(path_or_buf=_EXPANDED_BUILD_FILE)
+    for b in build_df:
+        for k in ("flowerMainWeights",
+                  "featherMainWeights",
+                  "sandMainWeights",
+                  "cupMainWeights",
+                  "headMainWeights",
+                  "secWeights"):
+            build_df[b][k] = pd.Series(build_df[b][k])
+else:
+    all_build_amount = 0
+    for i in raw_build_data.index:
+        if type(raw_build_data.iloc[i]['角色']) != str:
+            all_build_amount = i
+            break
+    print('正在展开build......')
+    d = {}
+    build_amount = 0
+    for i in range(all_build_amount):
+        if raw_build_data.iloc[i]['启用'] == 'yes':
+            d[build_amount] = expand(raw_build_data.iloc[i])
+            build_amount += 1
+    build_df = pd.DataFrame(d)
+    build_df.to_json(path_or_buf=proDir + '/config/expend_build.json', force_ascii=False)
+    print('展开完成.')
 
 if __name__ == '__main__':
     pass

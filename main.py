@@ -1,19 +1,15 @@
-import os
-import time
 from configparser import ConfigParser
+import util
 
 import pandas as pd
 
 from artifact import Artifact, artifacts, good_arts
 from build import build_df
 
-proDir = os.path.split(os.path.realpath(__file__))[0]
 
-cfg = ConfigParser()
-cfg.read(proDir + '/config/screen.ini')
-
-score_threshold = float(cfg.items('screen')[0][1])
-rarity_threshold = float(cfg.items('screen')[1][1])
+score_threshold = util.GetConfig('score_threshold')
+rarity_threshold = util.GetConfig('rarity_threshold')
+DEBUG = util.GetConfig('debug')
 
 
 def sort_art(df: pd.DataFrame):
@@ -40,6 +36,15 @@ def sort_art(df: pd.DataFrame):
     return sorted_df
 
 
+fitness_sub = {
+    "flower": 1,
+    "feather": 1,
+    "sand": 0.8,
+    "cup": 0.6,
+    "head": 0.8,
+}
+
+
 def adapt(art: Artifact, df: pd.DataFrame):
     """对每一个build进行适配性评分"""
     d_temp = {}
@@ -50,10 +55,11 @@ def adapt(art: Artifact, df: pd.DataFrame):
         build_adapt = pd.Series([], dtype='float64')
         fitness += art.main.multiply(df[k]['{}MainWeights'.format(art.position)]).dropna().sum()  # 主属性加权和
         fitness += art.sec.multiply(df[k]['secWeights']).dropna().sum()  # 副属性加权和
-        if art.set not in df[k]['sets']:  # 非套装扣0.6
-            fitness -= 0.6
+        if art.set not in df[k]['sets']:  # 非对应套装，依据部位减去一定的适配度评分
+            fitness -= fitness_sub[art.position]
         if art.star < 5:  # 非五星扣0.6
-            fitness -= 0.6
+            # fitness -= 0.6
+            raise NotImplemented
         adapt_score = fitness / df[k]['best_{}'.format(art.position)]  # 适配分 = 适配度 / 最佳适配度
         # 将build-评分-难度储存到列表中，并以指针为key储存到字典中
         build_adapt['buildName'] = df[k]['buildName']
@@ -75,12 +81,21 @@ if __name__ == '__main__':
     print('正在分析圣遗物......')
     print('只显示适配度大于{}, 或稀有度大于{}的圣遗物.'.format(
         '{:.1%}'.format(score_threshold), '{:.1f}'.format(rarity_threshold)))
+    if DEBUG:
+        print('测试模式，只检测前100个圣遗物.')
 
     art_d = {}
     p_ = 0
     idx = 0
     lock = [0] * 2000
-    for artifact in artifacts:
+    num_artifacts = len(artifacts)
+    # print('比较莫娜，good：',len(artifacts), len(good_arts))
+    # print('mona:', artifacts[0])
+    # print('locked:', good_arts[0])
+    # exit(1)
+    artifacts_to_examine = min(
+        util.MAX_DEBUG_ARTIFACTS, num_artifacts) if DEBUG else num_artifacts
+    for artifact in artifacts[:artifacts_to_examine]:
         a = Artifact()
         a.read(artifact)
         temp_best = 0
@@ -178,6 +193,21 @@ if __name__ == '__main__':
             ##print( good_art)
             if (good_art['lock'] == False):
                 list_lock.append(idx)
+            # TODO: Make sure mona and good are matched correctly.
+            try:
+                mona_art = artifacts[idx_convert]
+                lock_art = good_arts[idx]
+                # 比较主属性以及等级，套装等信息
+                # assert mona_art['setName'].lower() == lock_art['setKey'].lower()
+                # assert mona_art['position'] == lock_art['slotKey']
+                assert mona_art['level'] == lock_art['level']
+                assert mona_art['star'] == lock_art['rarity']
+                # todo: 比较属性值
+            except:
+                print('圣遗物匹配失败，放弃锁定。检查mona.json与good.json格式是否改动:')
+                print(f'mona.json: {mona_art}')
+                print(f'good.json: {lock_art}')
+                raise
             ##print('<============mona==============【{}】============================>'.format(idx_convert))
             ##print('<============good================【{}】============================>'.format(idx))
         idx += 1
@@ -186,5 +216,3 @@ if __name__ == '__main__':
     print_lock.close()
     print('需要加锁good.json以下圣遗物')
     print(list_lock)
-    time.sleep(999)
-    print('999秒后自动关闭窗口')

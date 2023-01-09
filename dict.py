@@ -242,14 +242,17 @@ set_simple = {'如雷': ['thunderingFury'],
               '祭火': ['prayersForIllumination'],
               '祭水': ['prayersForDestiny'],
               '祭冰': ['PrayersToSpringtime'],
+              '渡火': ['lavaWalker'],
               '冒险家': ['adventurer'],
               '幸运儿': ['luckyDog'],
               '游医': ['travelingDoctor'],
+              # 2件套
               '攻击2': ['shimenawaReminiscence', 'EchoesOfAnOffering', 'gladiatorFinale', 'VermillionHereafter',
-                      'braveHeart', 'resolutionOfSojourner',
-                      'DesertPavilionChronicle'],  # TODO: 2风近似为2攻击
+                      'braveHeart', 'resolutionOfSojourner'],
               '精通2': ['wandererTroupe', 'GildedDreams', 'instructor', 'FlowerOfParadiseLost'],
-              '防御2': ['huskOfOpulentDreams', 'defenderWill']
+              '防御2': ['huskOfOpulentDreams', 'defenderWill'],
+              '治疗2': ['maidenBeloved', 'oceanHuedClam'],
+              '风2': ['viridescentVenerer', 'DesertPavilionChronicle']
               }
 
 main_simple = {

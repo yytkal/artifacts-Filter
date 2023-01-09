@@ -4,9 +4,12 @@ import os
 import pandas as pd
 from jsonpath import jsonpath
 
+import util
 from dict import set_dict, attribute_dict, position_dict
 from rarity import rarity
 
+_MAX_LVL = int(util.GetConfig('max_artifact_lvl'))
+_MIN_LVL = int(util.GetConfig('min_artifact_lvl'))
 proDir = os.path.split(os.path.realpath(__file__))[0]
 
 with open(proDir + '/mona.json', 'r', encoding='utf8') as jd:
@@ -61,7 +64,10 @@ class Artifact:
         for i in range(len(self.raw_sec)):
             self.sec[self.raw_sec.index[i]] = \
                 self.raw_sec[i] / jsonpath(attribute_dict, "$.{}.average".format(self.raw_sec.index[i]))[0]
-        if self.level < 8 and self.star >= 4:  # 筛选合格的胚子
+        # TODO: Make this work with lvl 20.
+        if _MAX_LVL >= self.level >= _MIN_LVL and self.star >= 4:  # 筛选合格的胚子
+            if self.star == 4:
+                raise NotImplemented
             if len(self.sec) == 3:  # 初始3词缀
                 rarity_list = [self.position, 3] + self.main.index.tolist() + self.sec.index.tolist()
                 self.rarity = rarity(rarity_list)
