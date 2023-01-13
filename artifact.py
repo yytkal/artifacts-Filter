@@ -39,6 +39,9 @@ class Artifact:
         self.sec = pd.Series([], dtype='float64')  # 副词条归一化
         self.rarity = 0
 
+    def should_examine(self):
+        return _MAX_LVL >= self.level >= _MIN_LVL and self.star >= 4
+
     def read(self, art_dict: dict):
         self.star = art_dict['star']
         self.set = art_dict['setName']
@@ -64,25 +67,33 @@ class Artifact:
         for i in range(len(self.raw_sec)):
             self.sec[self.raw_sec.index[i]] = \
                 self.raw_sec[i] / jsonpath(attribute_dict, "$.{}.average".format(self.raw_sec.index[i]))[0]
-        # TODO: Make this work with lvl 20.
         if _MAX_LVL >= self.level >= _MIN_LVL and self.star >= 4:  # 筛选合格的胚子
             if self.star == 4:
                 raise NotImplemented
-            if len(self.sec) == 3:  # 初始3词缀
-                rarity_list = [self.position, 3] + self.main.index.tolist() + self.sec.index.tolist()
+            num_upgrades = int(self.level / 4)
+            if self.level < 4:  # 4 级以下可以直接计算稀有度
+                rarity_list = [self.position, len(self.sec)] + self.main.index.tolist() + self.sec.index.tolist()
                 self.rarity = rarity(rarity_list)
-            elif len(self.sec) == 4:
-                if self.star < 4:  # 初始4词缀
-                    rarity_list = [self.position, 3] + self.main.index.tolist() + self.sec.index.tolist()
-                    self.rarity = rarity(rarity_list)
-                elif self.star >= 4:
-                    max_normalize = self.sec.max()  # 归一值中的最大值
-                    if max_normalize > 1.2:  # 大于1.2，初始4词条
-                        rarity_list = [self.position, 4] + self.main.index.tolist() + self.sec.index.tolist()
-                        self.rarity = rarity(rarity_list)
-                    else:  # 小于1.2，初始3词条
-                        rarity_list = [self.position, 4] + self.main.index.tolist() + self.sec.index.tolist()
-                        self.rarity = rarity(rarity_list)
+            else:
+                total_sec = sum(self.sec)
+                self.sec_chs += f'; 现词条数： {total_sec}; '
+                estimated_initial_sec_count = total_sec - num_upgrades
+                initial_sec_count = 4 if estimated_initial_sec_count >= 3.5 else 3
+                self.sec_chs += f'; 初始词条数： {initial_sec_count}; '
+                rarity_list = [self.position, initial_sec_count] + self.main.index.tolist() + self.sec.index.tolist()
+                self.rarity = rarity(rarity_list)
+            # 如果双爆词条数量等于升级数+1，可以留下来当散件
+            crit_counts = self.sec.get('critical', 0) + self.sec.get('criticalDamage', 0)
+            if self.level >= 4:
+                if crit_counts > num_upgrades + 0.5:
+                    # 满级圣遗物有5.5条双爆可以留
+                    self.rarity = 8.6
+                elif self.position == 'head' and self.main.index in (
+                        'critical', 'criticalDamage') and crit_counts > num_upgrades / 2:
+                    # 满级双爆头有2.5条双爆属性可以留
+                    self.rarity = 8.6
+            elif (self.position == 'head' and crit_counts > 0.5) or crit_counts > 1.5:
+                self.rarity = 8.6
 
 
 if __name__ == '__main__':

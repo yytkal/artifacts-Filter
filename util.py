@@ -2,7 +2,7 @@ import os
 import configparser
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-MAX_DEBUG_ARTIFACTS = 100
+MAX_DEBUG_ARTIFACTS = 2
 
 def GetConfig(option: str):
     """Returns (score, rarity) threshold."""

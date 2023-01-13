@@ -35,7 +35,16 @@ def expect_of_artifact(artifact_attribute: list):
     """
     输入圣遗物的属性，计算该圣遗物的稀有度
     [部位，初始词条数，主属性，副属性1，副属性2，...]
+
+    测试：采用 https://nga.178.com/read.php?tid=33747478， 圣遗物稀有度中的2个圣遗物进行测试，结果吻合。
     """
+    # 测试1：双爆火伤杯，得分63852
+    # artifact_attribute = ['cup', 4, 'fireBonus', 'critical', 'criticalDamage', 'lifePercentage', 'elementalMastery']
+    # 测试2：三词条垃圾花，得分48.9
+    # artifact_attribute = ['flower', 3, 'lifeStatic', 'attackStatic', 'defendStatic', 'lifePercentage']
+    # 测试3：初始3词条的次极品火伤杯，rarity得分8.7
+    # artifact_attribute = ['cup', 3, 'fireBonus', 'critical', 'criticalDamage', 'lifePercentage', 'elementalMastery']
+
     p = 1  # 圣遗物初始概率为1
     main_weight = weights_df.loc[artifact_attribute[0]].dropna(inplace=False)  # 读取对应部位主属性权重
     p *= main_weight[artifact_attribute[2]] / main_weight.values.sum()  # 获得主属性出现概率
@@ -43,6 +52,7 @@ def expect_of_artifact(artifact_attribute: list):
     if artifact_attribute[2] in sec_weight.index:  # 检测主属性是否在原始副属性列表中
         sec_weight = sec_weight.drop(artifact_attribute[2])  # 如果是，则去除
     p *= probability_of_sec(artifact_attribute[3:], sec_weight)  # 计算副属性出现概率
+
     # 初始词条数也要折算为概率
     if artifact_attribute[1] == 4:
         p *= 0.2
@@ -51,23 +61,6 @@ def expect_of_artifact(artifact_attribute: list):
     elif artifact_attribute[1] == 2:
         p = 1
     return 1 / p
-
-
-artifact_standard = 3.023554709325051  # 3.02为cup难度系数
-
-
-def rarity(artifact_attribute: list):
-    """接受导出的圣遗物词条，输出圣遗物的稀有度"""
-    r = 1
-    if artifact_attribute[0] == "flower" or artifact_attribute[0] == "feather":
-        r *= math.log(expect_of_artifact(artifact_attribute), artifact_standard)
-    elif artifact_attribute[0] == "sand":
-        r *= math.log(expect_of_artifact(artifact_attribute), artifact_standard)
-    elif artifact_attribute[0] == "cup":
-        r *= math.log(expect_of_artifact(artifact_attribute), artifact_standard)
-    elif artifact_attribute[0] == "head":
-        r *= math.log(expect_of_artifact(artifact_attribute), artifact_standard)
-    return r
 
 
 def probably_sec(valid_sec_attribute: list, corresponded_sec: pd.Series):
@@ -105,9 +98,12 @@ def probably_sec(valid_sec_attribute: list, corresponded_sec: pd.Series):
         # 大于四有效词条的build选取最小的四个权重词条即可
         sorted_sec = corresponded_sec.filter(valid_sec_attribute).sort_values()  # 以有效属性筛选权重并排序
         pointer = 0  # 指针，若5个属性权重均为100，则从第一个开始
+        if sorted_sec[3] == 100:  # no need to include any static attributes.
+            sorted_sec = sorted_sec.loc[lambda x: x <= 100]
         for i in range(len(sorted_sec) - 1):
             if sorted_sec[i] < sorted_sec[i + 1]:  # 指出权重变为100的点
-                pointer = i + 1
+                if not pointer:
+                    pointer = i + 1
                 break
         add_esc_comb = list(combinations(sorted_sec[pointer:].index, 4 - pointer))  # 为了达成4词条要添加的词条组合
         temp = 0
@@ -125,10 +121,16 @@ def rarity_of_build(eff_main: list, eff_sec: list):
     eff_sec:[副属性1，副属性2，...]
     """
     p = 1  # 圣遗物初始概率为1
+    # Testcase1: 胡桃的双爆火伤杯，难度为10
+    # eff_main = ['cup', 'fireBonus']
+    # eff_sec = ['lifePercentage', 'attackPercentage', 'elementalMastery', 'critical', 'criticalDamage',]
+    # 奶妈生命沙，难度为1.2
+    # eff_main = ['sand', 'lifePercentage']
+    # eff_sec = ['lifePercentage']
+    if len(eff_main) > 2:
+        assert eff_main == ['head', 'critical', 'criticalDamage']
     main_weight = weights_df.loc[eff_main[0]].dropna(inplace=False)  # 读取对应部位主属性权重
     p *= main_weight[eff_main[1]] / main_weight.values.sum()  # 主属性权重
-    if len(eff_main) > 2:
-        p *= 2
     sec = copy.deepcopy(eff_sec)
     sec_weight = copy.deepcopy(raw_sec_weights)
     if eff_main[1] in sec:  # 检测主属性是否在有效副属性列表中
@@ -136,17 +138,25 @@ def rarity_of_build(eff_main: list, eff_sec: list):
     if eff_main[1] in sec_weight:  # 检测主属性是否在有效副属性列表中
         sec_weight = sec_weight.drop(eff_main[1])  # 如果是，则删除
     p *= probably_sec(sec, sec_weight)  # 计算副属性出现概率
-    e = 1 / p
-    r = 1
-    if eff_main[0] == "flower" or eff_main[0] == "feather":
-        r *= math.log(e, artifact_standard)
-    elif eff_main[0] == "sand":
-        r *= math.log(e, artifact_standard)
-    elif eff_main[0] == "cup":
-        r *= math.log(e, artifact_standard)
-    elif eff_main[0] == "head":
-        r *= math.log(e, artifact_standard)
-    return r
+    return math.log(
+        1 / p, 10) * ARTIFACT_NORMALIZATION_MULTIPLIER
+
+
+# 计算见 https://nga.178.com/read.php?tid=33747478
+# log(圣遗物刷取难度, 10) ×　２.08
+ARTIFACT_NORMALIZATION_MULTIPLIER = 2.08
+
+
+def rarity(artifact_attribute: list):
+    """接受导出的圣遗物词条，输出圣遗物的稀有度
+
+    [部位，初始词条数，主属性，副属性1，副属性2，...]
+    """
+    # print(math.log(
+    #     expect_of_artifact(['flower', 4, 'lifeStatic', 'recharge', 'elementalMastery', 'critical', 'criticalDamage']), 10) * ARTIFACT_NORMALIZATION_MULTIPLIER)
+    # exit(0)
+    return math.log(
+        expect_of_artifact(artifact_attribute), 10) * ARTIFACT_NORMALIZATION_MULTIPLIER
 
 
 if __name__ == '__main__':

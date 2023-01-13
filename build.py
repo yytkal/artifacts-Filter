@@ -54,15 +54,18 @@ def expand(build: pd.Series):
     expanded_build['sandDifficulty'] = rarity_of_build(sand_main_att, eff_attribute)
     expanded_build['cupDifficulty'] = rarity_of_build(cup_main_att, eff_attribute)
     expanded_build['headDifficulty'] = rarity_of_build(head_main_att, eff_attribute)
-    # 生成各部位主属性评分权重 *5
+    # 详情见https://nga.178.com/read.php?tid=33747478，适配度算法，通用算法
+    # 生成各部位主属性评分权重,主属性正确3.5
+    # 主属性不符，但是为有效属性，2.5
+    # 其余皆设置为0
     expanded_build['flowerMainWeights'] = pd.Series([1, 0], index=flower_main_att)
     expanded_build['featherMainWeights'] = pd.Series([1, 0], index=feather_main_att)
-    expanded_build['sandMainWeights'] = pd.Series([1, 3.3], index=sand_main_att)
-    expanded_build['cupMainWeights'] = pd.Series([1, 3.3], index=cup_main_att)
+    expanded_build['sandMainWeights'] = pd.Series([1, 3.5], index=sand_main_att)
+    expanded_build['cupMainWeights'] = pd.Series([1, 3.5], index=cup_main_att)
     if len(head_main_att) == 2:
-        expanded_build['headMainWeights'] = pd.Series([1, 3.3], index=head_main_att)
+        expanded_build['headMainWeights'] = pd.Series([1, 3.5], index=head_main_att)
     else:
-        expanded_build['headMainWeights'] = pd.Series([1, 3.3, 3.3], index=head_main_att)
+        expanded_build['headMainWeights'] = pd.Series([1, 3.5, 3.5], index=head_main_att)
     # 各部位主属性评分权重补完 *3
     for position in positions[2:]:
         temp = '{}MainWeights'.format(position)
@@ -96,7 +99,7 @@ def expand(build: pd.Series):
         else:
             full_sec = sec.sort_values(ascending=False)
         best_att = pd.concat([eff_main, full_sec])
-        best_score = eff_main[0] + 1.176 * full_sec.sum()
+        best_score = eff_main[0] + full_sec.sum()
         expanded_build['best_{}'.format(position)] = best_score
     # 返回
     return expanded_build
